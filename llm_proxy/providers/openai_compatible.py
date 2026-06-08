@@ -10,7 +10,7 @@ from llm_proxy.tokens import estimate_messages_tokens, estimate_text_tokens
 
 
 class OpenAICompatibleProvider:
-    def __init__(self, *, base_url: str, api_key_env: str, default_model: str) -> None:
+    def __init__(self, *, base_url: str, api_key_env: str | None, default_model: str) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key_env = api_key_env
         self.default_model = default_model
@@ -22,16 +22,17 @@ class OpenAICompatibleProvider:
         span_name: str,
         trace_id: str,
     ) -> ProviderResult:
-        api_key = os.getenv(self.api_key_env)
-        if not api_key:
+        api_key = os.getenv(self.api_key_env) if self.api_key_env else None
+        if self.api_key_env and not api_key:
             raise RuntimeError(f"Missing provider API key environment variable: {self.api_key_env}")
 
         request_body = {**body}
         request_body.setdefault("model", self.default_model)
+        headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}"},
+                headers=headers,
                 json=request_body,
             )
             response.raise_for_status()
@@ -63,4 +64,3 @@ class OpenAICompatibleProvider:
             usage_source=usage_source,
             upstream_base_url=self.base_url,
         )
-

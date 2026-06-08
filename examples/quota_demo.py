@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the LLM proxy quota demo workflow.")
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--trace-id", default="launch-demo-001")
-    parser.add_argument("--provider", default="mock", choices=["mock", "groq"])
+    parser.add_argument("--provider", default="mock", choices=["mock", "groq", "local"])
     return parser.parse_args()
 
 
@@ -58,6 +58,8 @@ def reset_demo_model(client: httpx.Client, provider: str) -> None:
 def model_for_provider(provider: str) -> str:
     if provider == "groq":
         return "llama-3.1-8b-instant"
+    if provider == "local":
+        return "llama3.2:1b"
     return "gpt-4.1-mini"
 
 

@@ -10,8 +10,8 @@ def build_provider(config: ProviderConfig) -> Provider:
     if config.type == "smart_mock":
         return SmartMockProvider(default_model=config.default_model)
     if config.type == "openai_compatible":
-        if not config.base_url or not config.api_key_env:
-            raise ValueError("openai_compatible providers require base_url and api_key_env")
+        if not config.base_url:
+            raise ValueError("openai_compatible providers require base_url")
         return OpenAICompatibleProvider(
             base_url=config.base_url,
             api_key_env=config.api_key_env,
