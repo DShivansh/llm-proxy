@@ -122,7 +122,7 @@ def test_mock_workflow_opens_circuit_and_records_trace(tmp_path: Path):
         ]
 
 
-def test_streaming_requests_are_rejected_and_traced(tmp_path: Path):
+def test_mock_streaming_requests_are_supported_and_traced(tmp_path: Path):
     app = create_app(load_config(write_config(tmp_path)))
 
     with TestClient(app) as client:
@@ -136,9 +136,11 @@ def test_streaming_requests_are_rejected_and_traced(tmp_path: Path):
             },
         )
 
-        assert response.status_code == 400
-        assert response.json()["error"]["code"] == "streaming_not_supported"
+        assert response.status_code == 200
+        assert "data:" in response.text
+        assert "[DONE]" in response.text
 
         trace = client.get("/internal/traces/stream-test").json()
-        assert trace["spans"][0]["status"] == "error"
-        assert trace["spans"][0]["error_message"] == "Streaming is not supported by this proxy MVP"
+        assert trace["spans"][0]["status"] == "success"
+        assert trace["spans"][0]["usage_source"] == "provider"
+        assert trace["spans"][0]["output_tokens"] == 80
